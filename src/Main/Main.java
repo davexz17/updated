@@ -81,57 +81,50 @@ public class Main {
 // Method to view requests (fetching data from tbl_request, tbl_products, and tbl_user)
 public static void viewRequests() {
     config db = new config();
+
     String query = "SELECT r.request_id, p.Product_name, u.User_name, r.request_date " +
                    "FROM tbl_request r " +
                    "JOIN tbl_products p ON r.requested_product = p.Product_id " +
-                   "JOIN tbl_user u ON r.user_id = u.User_id";  // Join tbl_request with tbl_products and tbl_user
+                   "JOIN tbl_user u ON r.user_id = u.User_id";
 
-    String[] headers = {"Request ID", "Product Name", "User Name", "Request Date"};  // Display headers
-    String[] columns = {"request_id", "Product_name", "User_name", "request_date"};  // Columns to fetch from the database
+    List<Map<String, Object>> records = db.fetchRecords(query);
 
-    // Debugging: Print the query to verify it
-    System.out.println("Executing SQL Query: " + query);
-
-    // Fetch the records from the database
-    List<Map<String, Object>> records = db.fetchRecords(query, columns);
-
-    // Debugging: Check if the records are empty or not
-    System.out.println("Records fetched: " + records.size());
-
-    // Check if records are empty before proceeding
-    if (records != null && !records.isEmpty()) {
-        // Printing the records in a readable format
-        System.out.println("--------------------------------------------------------------------------------");
-        System.out.printf("| %-12s | %-20s | %-20s | %-15s |\n", headers[0], headers[1], headers[2], headers[3]);
-        System.out.println("--------------------------------------------------------------------------------");
-
-        for (Map<String, Object> row : records) {
-            // Debugging: Print the row data to see what is returned
-            System.out.println("Row data: " + row);
-
-            String requestDate = row.get("request_date") != null ? row.get("request_date").toString() : "N/A";  // Handle null values
-
-            // Convert the timestamp to a human-readable date format
-            String formattedDate = "Invalid Date";
-            if (!"N/A".equals(requestDate)) {
-                long timestamp = Long.parseLong(requestDate);
-                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                formattedDate = sdf.format(new java.util.Date(timestamp * 1000)); // Convert to milliseconds
-            }
-
-            // Print each row of data
-            System.out.printf("| %-12d | %-20s | %-20s | %-15s |\n", 
-                row.get("request_id"), 
-                row.get("Product_name"), 
-                row.get("User_name"), 
-                formattedDate);
-        }
-        System.out.println("--------------------------------------------------------------------------------");
-    } else {
-        
+    if (records == null || records.isEmpty()) {
         System.out.println("No requests available.");
+        return;
     }
+
+    System.out.println("----------------    List<Map<String, Object>> records = db.fetchRecords(query);\n" +"--------------------------------------------------------------------");
+    System.out.printf("| %-12s | %-20s | %-20s | %-20s |\n",
+            "Request ID", "Product Name", "User Name", "Request Date");
+    System.out.println("------------------------------------------------------------------------------------");
+
+    for (Map<String, Object> row : records) {
+
+        long timestamp = 0;
+        String formattedDate = "N/A";
+
+        if (row.get("request_date") != null) {
+            try {
+                timestamp = Long.parseLong(row.get("request_date").toString());
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                formattedDate = sdf.format(new java.util.Date(timestamp * 1000));
+            } catch (Exception e) {
+                formattedDate = "Invalid";
+            }
+        }
+
+        System.out.printf("| %-12s | %-20s | %-20s | %-20s |\n",
+                row.get("request_id"),
+                row.get("Product_name"),
+                row.get("User_name"),
+                formattedDate
+        );
+    }
+
+    System.out.println("------------------------------------------------------------------------------------");
 }
+
 
 
     public static boolean loginUser(Scanner sc, config database) {
@@ -343,11 +336,23 @@ public static void viewRequests() {
         }
     }
 
-    private static void viewUsers() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
+   private static void viewUsers() {
+    config db = new config();
+    String query = "SELECT User_id, User_name, User_email, User_role, User_status FROM tbl_user";
+    String[] headers = {"User ID", "User Name", "User Email", "User Role", "User Status"};
+    String[] columns = {"User_id", "User_name", "User_email", "User_role", "User_status"};
+    
+    db.viewRecords(query, headers, columns);
+}
 
-    private static void viewStockTransactions() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
+
+   private static void viewStockTransactions() {
+    config db = new config();
+    String query = "SELECT Transaction_id, Product_name, Quantity, Date FROM tbl_stock_transactions";
+    String[] headers = {"Transaction ID", "Product Name", "Quantity", "Date"};
+    String[] columns = {"Transaction_id", "Product_name", "Quantity", "Date"};
+
+    db.viewRecords(query, headers, columns);
+}
+
 }
